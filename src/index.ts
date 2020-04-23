@@ -3,14 +3,16 @@ interface Callback {
 }
 class EventHub {
   private cache: { [key: string]: Array<Callback> } = {}
+  private safeCache: (eventName: string) => Array<Callback> = (eventName) =>
+    this.cache[eventName] || []
   on(eventName: string, cb: Callback) {
     ;(this.cache[eventName] || (this.cache[eventName] = [])).push(cb)
   }
   emit(eventName: string, data?: unknown) {
-    ;(this.cache[eventName] || []).forEach((cb) => cb(data))
+    this.safeCache(eventName).forEach((cb) => cb(data))
   }
-  off(eventName: string, fn: Callback) {
-    const index = (this.cache[eventName] || []).indexOf(fn)
+  off(eventName: string, cb: Callback) {
+    const index = this.safeCache(eventName).indexOf(cb)
     index > -1 && this.cache[eventName].splice(index, 1)
   }
 }
